@@ -1,0 +1,39 @@
+#! /bin/sh
+
+set -e
+set -u
+set -x
+
+builder=`readlink -f $1`
+
+shift
+
+out=/home/ac/pushpkgs/`echo $@ $(uname -sr) | cat - $builder | sha1`
+
+if test -d $out
+then
+	if test -f $out/.coolpkg_ok
+	then
+		echo $out
+		exit 0
+	else
+		rm -rf $out
+	fi
+fi
+
+builddir=`mktemp -d`
+startdir=`pwd`
+coolpkgdir=`pwd`
+cd $builddir
+mkdir -p $out
+if env coolpkgdir="$coolpkgdir" out="$out" $builder $@
+then
+	touch $out/.coolpkg_ok
+	cd $startdir
+ 	rm -rf $builddir	
+	echo $out
+else
+	echo "build failed"
+	rm -rf $builddir
+	exit 1
+fi
