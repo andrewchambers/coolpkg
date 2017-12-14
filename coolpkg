@@ -109,6 +109,6 @@ def buildpkg(storepath, pkg):
 
 def main():
 	pkg = parsepkg(sys.argv[1], " ".join(sys.argv[2:]))
-	print(buildpkg("/home/ac/coolpkgstore/", pkg))
+	print(buildpkg(os.path.join(os.path.expanduser("~"), "coolpkgstore"), pkg))
 
 main()
