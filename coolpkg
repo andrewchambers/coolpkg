@@ -9,33 +9,41 @@ import os
 import os.path
 import tempfile
 import shutil
+import urllib.request
 
-Pkg = collections.namedtuple('Pkg', ['path', 'deps', 'script', 'args', 'sha256'])
+Pkg = collections.namedtuple('Pkg', ['storepath','pkgpath', 'deps', 'script', 'args', 'sha256'])
 
-def parsepkg(path, args):
-	path = os.path.abspath(path)
+def parsepkg(store, pkgpath, args):
+	pkgpath = os.path.abspath(pkgpath)
 	startdir = os.getcwd()
-	pkgdirpath = os.path.dirname(path)
+	pkgdirpath = os.path.dirname(pkgpath)
 	deps = collections.OrderedDict()
 	script = ""
 	header = True
-	with open(path) as f:
+	startenv = os.environ.copy()
+	with open(pkgpath) as f:
 		for line in f:
 			os.chdir(pkgdirpath)
-			print("chdir to", pkgdirpath)
 			if header:
 				if line.startswith("#!"):
 					header = False
 					script += line
 				elif line.startswith(".dep"):
+					for name in deps:
+						os.environ[name] = deps[name].storepath
+					line = os.path.expandvars(line)
 					m = re.search(r"^\.dep\s+([a-zA-Z_\.][a-zA-Z_\.0-9]*)\s+([^\s]+)(.*)$", line.strip())
 					if m == None:
 						raise Exception("bad .dep directive: " + line)
 					name = m.group(1)
 					deppath = m.group(2)
 					depargs = m.group(3)
-					deppkg = parsepkg(deppath, depargs)
+					if deppath.startswith("http://") or deppath.startswith("https://"):
+						deppath, depargs = dlcoolpkg(deppath, depargs)
+					deppkg = parsepkg(store, deppath, depargs)
 					deps[name] = deppkg
+					os.environ.clear()
+					os.environ.update(startenv)
 				elif line.strip() == "":
 					pass
 				else:
@@ -53,23 +61,27 @@ def parsepkg(path, args):
 	dgst.update(args.encode('utf8'))
 	dgst.update(script.encode('utf8'))
 
-	return Pkg(path=path, sha256=dgst.hexdigest(), deps=deps, args=args, script=script)
+	sha256=dgst.hexdigest()
+	pkg = Pkg(storepath=os.path.join(store, sha256), pkgpath=pkgpath, sha256=sha256, deps=deps, args=args, script=script)
+	buildpkg(pkg)
+	return pkg
 
-def buildpkg(storepath, pkg):
-	pkgPath = os.path.join(storepath, pkg.sha256)
-	successMarkerPath = os.path.join(pkgPath, ".coolpkg_ok")
-	if os.path.exists(pkgPath):
+def buildpkg(pkg):
+	startenv = os.environ.copy()
+
+	successMarkerPath = os.path.join(pkg.storepath, ".coolpkg_ok")
+	if os.path.exists(pkg.storepath):
 		if os.path.exists(successMarkerPath):
-			print("skipping build for " + pkg.path + "(already built)")
-			return pkgPath
+			print("skipping build for " + pkg.pkgpath + "(already built)")
+			return
 		else:
-			shutil.rmtree(pkgPath)
+			shutil.rmtree(pkg.storepath)
 
-	os.makedirs(pkgPath)
+	os.makedirs(pkg.storepath)
 
-	dependencies = {"out" : pkgPath}
+	dependencies = {"out" : pkg.storepath}
 	for name in pkg.deps:
-		dependencies[name] = buildpkg(storepath, pkg.deps[name])
+		dependencies[name] = pkg.deps[name].storepath
 
 	builddir = tempfile.mkdtemp()
 	buildscript = os.path.join(builddir, "builder")
@@ -82,33 +94,46 @@ def buildpkg(storepath, pkg):
 	startdir = os.getcwd()
 	os.chdir(builddir)
 	
-	
-	oldenv = {}
 	for name in dependencies:
-		oldenv[name] = os.environ.get(name, None)
 		os.environ[name] = dependencies[name]
 
 	result = os.system(buildscript+" "+pkg.args)
 	
-	for name in oldenv:
-		if oldenv[name] is None:
-			del os.environ[name]
-		else:
-			os.environ[name] = oldenv[name]
-
-
 	os.chdir(startdir)
 	if result == 0:
 		with open(successMarkerPath, 'wb') as f:
 			f.write(":)".encode('utf8'))
 	else:
-		raise Exception("build for package "+pkg.path+" failed")
+		raise Exception("build for package "+pkg.pkgpath+" failed")
 
-	return pkgPath
+	os.environ.clear()
+	os.environ.update(startenv)
 
+
+def sha256_checksum(filename, block_size=65536):
+    sha256 = hashlib.sha256()
+    with open(filename, 'rb') as f:
+        for block in iter(lambda: f.read(block_size), b''):
+            sha256.update(block)
+    return sha256.hexdigest()
+
+def dlcoolpkg(u, args):
+	args = args.strip().split(" ")
+	print(args)
+	sha256sum = args[0]
+	args = " ".join(args[1:])
+	print("downloading package from...", u)
+	d = tempfile.mkdtemp()
+	fname = u.split("/")[-1]
+	dlpath = os.path.join(d, fname)
+	urllib.request.urlretrieve(u, dlpath)
+	if sha256_checksum(dlpath) != sha256sum:
+		raise Exception("failed to validate checksum")
+	return dlpath, args
 
 def main():
-	pkg = parsepkg(sys.argv[1], " ".join(sys.argv[2:]))
-	print(buildpkg(os.path.join(os.path.expanduser("~"), "coolpkgstore"), pkg))
+	storepath = os.path.join(os.path.expanduser("~"), "coolpkgstore")
+	pkg = parsepkg(storepath, sys.argv[1], " ".join(sys.argv[2:]))
+	print(pkg)
 
 main()

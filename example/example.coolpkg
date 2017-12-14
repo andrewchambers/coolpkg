@@ -1,16 +1,5 @@
+.dep pkgs https://raw.githubusercontent.com/andrewchambers/coolpkgs/master/fetch-git.coolpkg fe4504ca3c7916ab9f0500630940ef1a9e2e5856cdf59129e96907e480c0df1a https://github.com/andrewchambers/coolpkgs coolpkgs 0d433b21fc5cf6e847c1989d2a753b6547581131
+.dep go19 ${pkgs}/coolpkgs/go1.9.coolpkg
 #! /bin/sh
 
-set -e
-set -u
-set -x
-
-coolpkgsurl=https://github.com/andrewchambers/coolpkgs.git
-coolpkgscommit=e69d32b93f550ea7efe4ef7b2e83135ed6e0e639
-coolpkgs=`coolpkg-fetch-git $coolpkgsurl coolpkgs $coolpkgscommit`/coolpkgs/
-export coolpkgs
-
-go1_9=`coolpkg-build $coolpkgs/go1.9.coolpkg`
-
-mkdir $out/bin
-
-ln -s $go1_9/go/bin/go $out/bin/go 
+$go19/go/bin/go version

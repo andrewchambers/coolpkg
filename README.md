@@ -24,7 +24,18 @@ Add ```coolpkg``` to your path (requires python3).
 
 ## Try the example:
 
-example being reworked.
+Read the file example.coolpkg, hopefully it is quite simple.
+
+run the command below to install the package and it's dependencies to ~/coolpkgstore/:
+
+```$ coolpkg ./example/example.coolpkg```
+
+This will do some cool things...
+
+- Bootstrap the package set from a sha256 checksummed url to get a rule for downloding git packages.
+- Use the downloaded rule to install a fixed copy coolpkgs package sets, install that as a package.
+- Install go1.9 from that set, implicitly knowing to use go1.4 from the same set to bootstrap itself.
+- Use that new version of go.
 
 # How it works:
 
@@ -40,8 +51,9 @@ installing your dependencies from specific commits via coolpkgs.
 
 # Todo
 
-- Implement the garbage collector  ```coolpkgs collect-garbage [rootdir...]```
+- Implement the garbage collector  ```coolpkgs-collect-garbage [rootdir...]```
 - Better isolation of builds.
 - Write the best documentation in the world. Show how to do atomic upgrades
   by building a set of symlinks as a package, then using mv to overwrite an old one.
+
 - parent's are not correctly settings deps. Need to add redo style .dep file or something.
