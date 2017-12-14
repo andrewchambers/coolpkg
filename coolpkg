@@ -1,0 +1,114 @@
+#! /usr/bin/env python
+
+import re
+import sys
+import stat
+import collections
+import hashlib
+import os
+import os.path
+import tempfile
+import shutil
+
+Pkg = collections.namedtuple('Pkg', ['path', 'deps', 'script', 'args', 'sha256'])
+
+def parsepkg(path, args):
+	path = os.path.abspath(path)
+	startdir = os.getcwd()
+	pkgdirpath = os.path.dirname(path)
+	deps = collections.OrderedDict()
+	script = ""
+	header = True
+	with open(path) as f:
+		for line in f:
+			os.chdir(pkgdirpath)
+			print("chdir to", pkgdirpath)
+			if header:
+				if line.startswith("#!"):
+					header = False
+					script += line
+				elif line.startswith(".dep"):
+					m = re.search(r"^\.dep\s+([a-zA-Z_\.][a-zA-Z_\.0-9]*)\s+([^\s]+)(.*)$", line.strip())
+					if m == None:
+						raise Exception("bad .dep directive: " + line)
+					name = m.group(1)
+					deppath = m.group(2)
+					depargs = m.group(3)
+					deppkg = parsepkg(deppath, depargs)
+					deps[name] = deppkg
+				elif line.strip() == "":
+					pass
+				else:
+					raise Exception("unknown directive: " + line)
+			else:
+				script += line
+
+			os.chdir(startdir)
+
+	print("args", args)
+	dgst = hashlib.sha256()
+	for name in deps:
+		dgst.update(name.encode('utf8'))
+		dgst.update(deps[name].sha256.encode('utf8'))
+	dgst.update(args.encode('utf8'))
+	dgst.update(script.encode('utf8'))
+
+	return Pkg(path=path, sha256=dgst.hexdigest(), deps=deps, args=args, script=script)
+
+def buildpkg(storepath, pkg):
+	pkgPath = os.path.join(storepath, pkg.sha256)
+	successMarkerPath = os.path.join(pkgPath, ".coolpkg_ok")
+	if os.path.exists(pkgPath):
+		if os.path.exists(successMarkerPath):
+			print("skipping build for " + pkg.path + "(already built)")
+			return pkgPath
+		else:
+			shutil.rmtree(pkgPath)
+
+	os.makedirs(pkgPath)
+
+	dependencies = {"out" : pkgPath}
+	for name in pkg.deps:
+		dependencies[name] = buildpkg(storepath, pkg.deps[name])
+
+	builddir = tempfile.mkdtemp()
+	buildscript = os.path.join(builddir, "builder")
+	with open(buildscript, 'wb') as f:
+		f.write(pkg.script.encode('utf8'))
+
+	print("starting build for", pkg)
+	st = os.stat(buildscript)
+	os.chmod(buildscript, st.st_mode | stat.S_IEXEC)
+	startdir = os.getcwd()
+	os.chdir(builddir)
+	
+	
+	oldenv = {}
+	for name in dependencies:
+		oldenv[name] = os.environ.get(name, None)
+		os.environ[name] = dependencies[name]
+
+	result = os.system(buildscript+" "+pkg.args)
+	
+	for name in oldenv:
+		if oldenv[name] is None:
+			del os.environ[name]
+		else:
+			os.environ[name] = oldenv[name]
+
+
+	os.chdir(startdir)
+	if result == 0:
+		with open(successMarkerPath, 'wb') as f:
+			f.write(":)".encode('utf8'))
+	else:
+		raise Exception("build for package "+pkg.path+" failed")
+
+	return pkgPath
+
+
+def main():
+	pkg = parsepkg(sys.argv[1], " ".join(sys.argv[2:]))
+	print(buildpkg("/home/ac/coolpkgstore/", pkg))
+
+main()
