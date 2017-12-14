@@ -10,9 +10,7 @@ coolpkgs=`coolpkg-fetch-git $coolpkgsurl coolpkgs $coolpkgscommit`/coolpkgs/
 export coolpkgs
 
 go1_9=`coolpkg-build $coolpkgs/go1.9.coolpkg`
-mc=`coolpkg-build $coolpkgs/mc.coolpkg`
 
 mkdir $out/bin
 
 ln -s $go1_9/go/bin/go $out/bin/go 
-ln -s $mc/bin/mbld $out/bin/mbld

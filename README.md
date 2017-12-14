@@ -11,7 +11,7 @@ The project goals are as follows:
 - Work on freebsd/openbsd.
 - Different package trees per OS, don't force abstractions. Ok to depend on BSD
   base systems/compilers.
-- Push self contained packages to other machines via ssh, even if they don't have ``coolpkg-build``.
+- Push self contained packages to other machines via ssh, even if they don't have ``coolpkg``.
 - Encourage users to curate their own custom/packaged package tree/repo, make this easy.
 
 # Status
@@ -20,22 +20,11 @@ Prototype and proof of concept.
 
 # Getting started:
 
-Add ```coolpkg-build``` and ```coolpkg-fetch-git``` to your path.
+Add ```coolpkg``` to your path (requires python3).
 
 ## Try the example:
 
-Read the file example.coolpkg, hopefully it is quite simple.
-
-run the command below to install the package and it's dependencies to ~/coolpkgstore/:
-
-```$ coolpkg-build ./example/example.coolpkg```
-
-This will do some cool things...
-
-- Downloads a pinned version of the coolpkgs package sets, install that as a package.
-- Install go1.9 from that set, implicitly knowing to use go1.4 from the same set to bootstrap itself.
-- Make a package containing a set of symlinks to the software specified in example.coolpkg
-- Print where the package is on the file system so you can create a symlink to it.
+example being reworked.
 
 # How it works:
 
@@ -51,7 +40,8 @@ installing your dependencies from specific commits via coolpkgs.
 
 # Todo
 
-- Implement the garbage collector  ```coolpkgs-collect-garbage [rootdir...]```
+- Implement the garbage collector  ```coolpkgs collect-garbage [rootdir...]```
 - Better isolation of builds.
 - Write the best documentation in the world. Show how to do atomic upgrades
   by building a set of symlinks as a package, then using mv to overwrite an old one.
+- parent's are not correctly settings deps. Need to add redo style .dep file or something.
