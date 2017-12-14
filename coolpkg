@@ -134,6 +134,6 @@ def dlcoolpkg(u, args):
 def main():
 	storepath = os.path.join(os.path.expanduser("~"), "coolpkgstore")
 	pkg = parsepkg(storepath, sys.argv[1], " ".join(sys.argv[2:]))
-	print(pkg)
+	print(pkg.storepath)
 
 main()
