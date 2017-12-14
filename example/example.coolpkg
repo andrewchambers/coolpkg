@@ -1,0 +1,18 @@
+#! /bin/sh
+
+set -e
+set -u
+set -x
+
+coolpkgsurl=https://github.com/andrewchambers/coolpkgs.git
+coolpkgscommit=e69d32b93f550ea7efe4ef7b2e83135ed6e0e639
+coolpkgs=`coolpkg-fetch-git $coolpkgsurl coolpkgs $coolpkgscommit`/coolpkgs/
+export coolpkgs
+
+go1_9=`coolpkg-build $coolpkgs/go1.9.coolpkg`
+mc=`coolpkg-build $coolpkgs/mc.coolpkg`
+
+mkdir $out/bin
+
+ln -s $go1_9/go/bin/go $out/bin/go 
+ln -s $mc/bin/mbld $out/bin/mbld

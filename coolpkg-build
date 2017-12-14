@@ -8,7 +8,7 @@ builder=`readlink -f $1`
 
 shift
 
-out=/home/ac/pushpkgs/`echo $@ $(uname -sr) | cat - $builder | sha1`
+out=~/coolpkgstore/`echo $@ $(uname -sr) | cat - $builder | sha1sum | cut -f 1 -d ' '`
 
 if test -d $out
 then
@@ -23,17 +23,17 @@ fi
 
 builddir=`mktemp -d`
 startdir=`pwd`
-coolpkgdir=`pwd`
+
 cd $builddir
 mkdir -p $out
-if env coolpkgdir="$coolpkgdir" out="$out" $builder $@
+if env out="$out" $builder $@ 1>&2
 then
 	touch $out/.coolpkg_ok
 	cd $startdir
  	rm -rf $builddir	
 	echo $out
 else
-	echo "build failed"
+	echo "build failed" 1>&2
 	rm -rf $builddir
 	exit 1
 fi

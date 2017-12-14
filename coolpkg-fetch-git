@@ -1,0 +1,36 @@
+#! /bin/sh
+
+set -e
+set -u
+set -x
+
+url=$1
+toname=$2
+commit=$3
+
+shift
+
+out=~/coolpkgstore/`echo $url $toname $commit | sha1sum | cut -f 1 -d ' '`
+
+if test -d $out
+then
+	if test -f $out/.coolpkg_ok
+	then
+		echo $out
+		exit 0
+	else
+		rm -rf $out
+	fi
+fi
+
+mkdir -p $out
+cd $out
+
+if git clone $url $toname 1>&2 && cd $toname && git fsck 1>&2 && git checkout $commit 1>&2
+then
+	touch $out/.coolpkg_ok
+	echo $out
+else
+	echo "fetch git failed"
+	exit 1
+fi
