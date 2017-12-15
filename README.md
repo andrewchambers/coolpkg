@@ -22,7 +22,7 @@ Prototype and proof of concept.
 
 # Getting started:
 
-Add ```coolpkg``` to your path (requires python3).
+Add ```coolpkg``` and ```coolpkg-install ``` to your path (requires python3).
 
 ## Try the example:
 
@@ -30,7 +30,7 @@ Read the file example.coolpkg, hopefully it is quite simple.
 
 run the command below to install the package and it's dependencies to ~/coolpkgstore/:
 
-```$ coolpkg ./example/example.coolpkg```
+```$ coolpkg-install ./example/example.coolpkg```
 
 This will do some cool things...
 
@@ -38,6 +38,7 @@ This will do some cool things...
 - Use the downloaded rule to install a fixed copy coolpkgs package sets, install that as a package.
 - Install go1.9 from that set, implicitly knowing to use go1.4 from the same set to bootstrap itself.
 - Use that new version of go.
+
 
 # How it works:
 

@@ -1,0 +1,47 @@
+#! /bin/sh
+
+set -u
+set -e
+# doesn't work without bash...
+set -o pipefail
+
+d=`mktemp -d`
+mkdir $d/pkgs
+
+for url in "$@"
+do
+	if test -f $url
+	then
+		cp $url $d/pkgs/
+	else
+		(cd $d/pkgs/ && curl -O $url)
+	fi
+done
+
+echo ".dep bootstrap \${builtins}/bootstrap.coolpkg" > $d/pkgs.coolpkg
+
+for pkg in $d/pkgs/*.coolpkg
+do
+	echo ".dep $(basename $pkg .coolpkg) $pkg" >> $d/pkgs.coolpkg
+done
+
+echo '#! /bin/sh' >> $d/pkgs.coolpkg
+echo "source \${bootstrap}/setup.env" >> $d/pkgs.coolpkg
+
+for pkg in $d/pkgs/*.coolpkg
+do
+	echo "coolpkg_merge_env \$$(basename $pkg .coolpkg)" >> $d/pkgs.coolpkg
+done
+
+echo 'echo "export PATH=$out/bin:\$PATH" > $out/setup.env' >> $d/pkgs.coolpkg
+
+
+coolpkg $d/pkgs.coolpkg | tee $d/build.log
+pkgdir=`tail -n 1 $d/build.log`
+
+rm -rf $d
+
+echo "your package is installed at:"
+echo "$pkgdir"
+echo "To add your programs to your path:"
+echo "source $pkgdir/setup.env"

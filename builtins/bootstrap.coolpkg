@@ -7,7 +7,7 @@ set -x
 # Extremely primitive environment, we don't have any PATH!
 # Try to build a minimal bootstrap up from scratch.
 
-primitives="true touch readlink false basename echo chmod install awk tr cut mkdir ln ls cp rm mv sed grep sort uniq expr cat uname"
+primitives="true sleep touch readlink false basename echo chmod install awk tr cut mkdir ln ls cp rm mv sed grep sort uniq expr cat uname"
 
 fetchtools="curl tar gzip git sha1sum"
 

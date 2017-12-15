@@ -53,7 +53,6 @@ def parsepkg(store, pkgpath, args):
 
 			os.chdir(startdir)
 
-	print("args", args)
 	dgst = hashlib.sha256()
 	for name in deps:
 		dgst.update(name.encode('utf8'))
@@ -88,7 +87,6 @@ def buildpkg(pkg):
 	with open(buildscript, 'wb') as f:
 		f.write(pkg.script.encode('utf8'))
 
-	print("starting build for", pkg)
 	st = os.stat(buildscript)
 	os.chmod(buildscript, st.st_mode | stat.S_IEXEC)
 	startdir = os.getcwd()
@@ -121,7 +119,6 @@ def sha256_checksum(filename, block_size=65536):
 
 def dlcoolpkg(u, args):
 	args = args.strip().split(" ")
-	print(args)
 	sha256sum = args[0]
 	args = " ".join(args[1:])
 	print("downloading package from...", u)
