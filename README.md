@@ -5,14 +5,16 @@ coolpkg is a source level package manager inspired heavily by nix.
 The project goals are as follows:
 
 - Reproduceable builds always.
-- Nix's power, just far far simpler in nearly every way.
+- Encourage users to curate their own custom/packaged package tree/repo, make this easy. (Package lists can be packages.)
 - Forking a package and adding custom changes is just a single file copy.
+  You could make a package to patch a package.
 - Mixing versions of packages freely on the same machine, no dependency hell ever.
 - Work on freebsd/openbsd.
 - Different package trees per OS, don't force abstractions. Ok to depend on BSD
   base systems/compilers.
 - Push self contained packages to other machines via ssh, even if they don't have ``coolpkg``.
-- Encourage users to curate their own custom/packaged package tree/repo, make this easy.
+- Nix's power, just far far simpler in nearly every way.
+
 
 # Status
 

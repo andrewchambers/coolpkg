@@ -1,0 +1,14 @@
+.dep bootstrap ${builtins}/bootstrap.coolpkg
+#! /bin/sh
+
+set -e
+set -u
+set -x
+
+source $bootstrap/setup.env
+
+cd $out
+curl -O $1
+t=`ls *`
+echo "SHA1 ($t) = $2" > SHASUM
+sha1sum -c SHASUM

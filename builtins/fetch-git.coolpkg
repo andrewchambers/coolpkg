@@ -1,0 +1,18 @@
+.dep bootstrap ${builtins}/bootstrap.coolpkg
+#! /bin/sh
+
+set -e
+set -u
+set -x
+
+source $bootstrap/setup.env
+
+set -e
+set -u
+set -x
+
+cd $out
+git clone $1 $2
+cd $2
+git fsck
+git checkout $3

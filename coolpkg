@@ -97,8 +97,10 @@ def buildpkg(pkg):
 	for name in dependencies:
 		os.environ[name] = dependencies[name]
 
+	os.environ["PATH"] = ""
+
 	result = os.system(buildscript+" "+pkg.args)
-	
+
 	os.chdir(startdir)
 	if result == 0:
 		with open(successMarkerPath, 'wb') as f:
@@ -131,7 +133,11 @@ def dlcoolpkg(u, args):
 		raise Exception("failed to validate checksum")
 	return dlpath, args
 
+def getbuiltinspath():
+	return os.path.join(os.path.dirname(os.path.realpath(__file__)), "builtins")
+
 def main():
+	os.environ['builtins'] = getbuiltinspath()
 	storepath = os.path.join(os.path.expanduser("~"), "coolpkgstore")
 	pkg = parsepkg(storepath, sys.argv[1], " ".join(sys.argv[2:]))
 	print(pkg.storepath)
