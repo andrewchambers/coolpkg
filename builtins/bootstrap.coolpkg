@@ -7,41 +7,54 @@ set -x
 # Extremely primitive environment, we don't have any PATH!
 # Try to build a minimal bootstrap up from scratch.
 
-primitives="true sleep touch readlink false basename echo chmod install awk tr cut mkdir ln ls cp rm mv sed grep sort uniq expr cat uname"
+primitives="true sleep touch readlink false basename echo chmod install awk tr cut mkdir ls cp rm mv sed grep sort uniq expr cat uname"
 
 fetchtools="curl tar gzip git sha1sum"
 
 # XXX bash, flex, yacc and bison shouldn't be here.
 ccomp="bash cc gcc ld as ar ranlib flex yacc bison"
 
+findprog() {
+	if test -e /run/current-system/sw/bin/$1
+	then
+		echo /run/current-system/sw/bin/$1
+	elif test -e /bin/$1
+	then
+		echo /bin/$prog
+	elif test -e /usr/bin/$1
+	then
+		echo /usr/bin/$1
+	elif test -e /usr/local/bin/$1
+	then
+		echo /usr/local/bin/$1
+	else
+		echo "COOLPKG_BOOTSTRAP_FAILED_TO_FIND_$1"
+		exit 1
+	fi
+}
 
-if /run/current-system/sw/bin/true
-then
-	# nixos
-	/run/current-system/sw/bin/mkdir $out/bin
+$(findprog mkdir) -p $out/bin
+export PATH=$PATH:$out/bin
 
-	for b in $primitives
-	do
-		/run/current-system/sw/bin/ln -s /run/current-system/sw/bin/$b $out/bin/$b
-	done
+$(findprog ln) -s $(findprog ln) $out/bin/ln
 
-	export PATH=$PATH:$out/bin
 
-	for b in $fetchtools
-	do
-		ln -s /run/current-system/sw/bin/$b $out/bin/$b
-	done
+for b in $primitives
+do
+	$(findprog ln) -s $(findprog $b) $out/bin/$b
+done
 
-	for b in $ccomp
-	do
-		ln -s /run/current-system/sw/bin/$b $out/bin/$b
-	done
+for b in $fetchtools
+do
+	ln -s $(findprog $b) $out/bin/$b
+done
 
-	ln -s /run/current-system/sw/bin/make $out/bin/bootstrap_coolpkg_make
-else
-	echo "PLATFORM CURRENT UNDER DEVELOPMENT OR UNSUPPORTED"
-	exit 1
-fi
+for b in $ccomp
+do
+	ln -s $(findprog $b) $out/bin/$b
+done
+
+ln -s $(findprog make) $out/bin/bootstrap_coolpkg_make
 
 cat <<EOF> $out/bin/coolpkg_merge_env
 #! /bin/sh
