@@ -34,23 +34,24 @@ run the command below to install the package and it's dependencies to ~/coolpkgs
 
 This will do some cool things...
 
-- Bootstrap the package set from a sha256 checksummed url to get a rule for downloding git packages.
-- Use the downloaded rule to install a fixed copy coolpkgs package sets, install that as a package.
+- Install a package set from a git url and install that as a package.
 - Install go1.9 from that set, implicitly knowing to use go1.4 from the same set to bootstrap itself.
-- Use that new version of go.
+- Install some other fun software.
+- Print out a 'virtual env' you can use
+  for running the software.
 
 
 # How it works:
 
-coolpkg-build hashes the script and any arguments and uses that to calculate the install
+coolpkg-build hashes the package files and any arguments provided and uses that to calculate the install
 directory. The package is content addressed, if you change any aspect of a package,
 including it's dependencies, the install paths change, they never conflict and shared
 dependencies are shared.
 
-package scripts are simply shell scripts that have a single contract, to follow...
-install into $out (currently ~/coolpkgstore/$HASH/), and be reproducible by recursively
-installing your dependencies from specific commits via coolpkgs.
+package scripts are simply shell scripts with
+dependency information prepended.
 
+package scripts have a simple contract, to follow - install into $out (currently ~/coolpkgstore/$HASH/), be reproducible by only using your listed dependencies (currently enforced by wiping $PATH).
 
 # Todo
 
