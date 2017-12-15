@@ -1,5 +1,4 @@
-.dep pkgs ${builtins}/fetch-git.coolpkg https://github.com/andrewchambers/coolpkgs coolpkgs 58f54810401b5a2c158e5766b34d4d654743a890
-
+.dep pkgs ${builtins}/fetch-git.coolpkg https://github.com/andrewchambers/coolpkgs coolpkgs 00876a114753c06af6774108175043bb258eeafa
 .dep stdenv ${pkgs}/coolpkgs/stdenv.coolpkg
 
 .dep go19 ${pkgs}/coolpkgs/go1.9.coolpkg
