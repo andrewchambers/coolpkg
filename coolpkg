@@ -9,7 +9,6 @@ import os
 import os.path
 import tempfile
 import shutil
-import urllib.request
 
 Pkg = collections.namedtuple('Pkg', ['storepath','pkgpath', 'deps', 'script', 'args', 'sha256'])
 
@@ -38,8 +37,6 @@ def parsepkg(store, pkgpath, args):
 					name = m.group(1)
 					deppath = m.group(2)
 					depargs = m.group(3)
-					if deppath.startswith("http://") or deppath.startswith("https://"):
-						deppath, depargs = dlcoolpkg(deppath, depargs)
 					deppkg = parsepkg(store, deppath, depargs)
 					deps[name] = deppkg
 					os.environ.clear()
@@ -108,27 +105,6 @@ def buildpkg(pkg):
 
 	os.environ.clear()
 	os.environ.update(startenv)
-
-
-def sha256_checksum(filename, block_size=65536):
-    sha256 = hashlib.sha256()
-    with open(filename, 'rb') as f:
-        for block in iter(lambda: f.read(block_size), b''):
-            sha256.update(block)
-    return sha256.hexdigest()
-
-def dlcoolpkg(u, args):
-	args = args.strip().split(" ")
-	sha256sum = args[0]
-	args = " ".join(args[1:])
-	print("downloading package from...", u)
-	d = tempfile.mkdtemp()
-	fname = u.split("/")[-1]
-	dlpath = os.path.join(d, fname)
-	urllib.request.urlretrieve(u, dlpath)
-	if sha256_checksum(dlpath) != sha256sum:
-		raise Exception("failed to validate checksum")
-	return dlpath, args
 
 def getbuiltinspath():
 	return os.path.join(os.path.dirname(os.path.realpath(__file__)), "builtins")
