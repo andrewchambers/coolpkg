@@ -56,8 +56,6 @@ package scripts have a simple contract, to follow - install into $out (currently
 # Todo
 
 - Implement the garbage collector  ```coolpkgs-collect-garbage [rootdir...]```
-- Better isolation of builds.
+- Better isolation of builds, fewer stuff in bootstrap.coolpkg.
 - Write the best documentation in the world. Show how to do atomic upgrades
   by building a set of symlinks as a package, then using mv to overwrite an old one.
-
-- parent's are not correctly settings deps. Need to add redo style .dep file or something.
